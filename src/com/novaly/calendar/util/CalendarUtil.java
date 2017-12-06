@@ -159,7 +159,7 @@ public class CalendarUtil {
 		if (firstDay == 0) { // Sunday
 			preMonthBegin = preMonthEnd - 5;
 		} else { // Others
-			preMonthBegin = preMonthEnd - (7 - firstDay);
+			preMonthBegin = preMonthEnd - (firstDay + 2);
 		}
 		
 		
