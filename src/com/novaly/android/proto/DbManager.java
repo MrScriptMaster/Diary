@@ -1,5 +1,7 @@
 package com.novaly.android.proto;
 
+import java.util.List;
+
 import com.novaly.android.proto.DbSchema;
 
 import android.database.sqlite.SQLiteOpenHelper;
@@ -39,8 +41,18 @@ public class DbManager extends SQLiteOpenHelper {
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (newVersion == 1) {
             onCreate(db);
+        } else {
+        	
         }
     }
 	
+	public List<Item> getNotes(GET_BY criteria) {
+		// TODO
+		return null;
+	}
 	
+	public List<Item> getEvents(GET_BY criteria) {
+		// TODO
+		return null;
+	}
 }

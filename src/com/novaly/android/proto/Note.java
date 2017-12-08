@@ -1,5 +1,6 @@
 package com.novaly.android.proto;
 
+import java.util.ArrayDeque;
 import java.util.Date;
 import java.util.List;
 
@@ -9,7 +10,8 @@ public class Note implements Item {
 	public String  m_Title;
 	public Date	   m_CreateDate;
 	public Date    m_AlteredDate;
-	public String    
+	public String  m_Body;
+	public String  m_Attachments;
 	
 	public Note() {
 		
@@ -17,22 +19,29 @@ public class Note implements Item {
 	
 	@Override
 	public TYPE type() {
-		return null;
+		return TYPE.TYPE_NOTE;
 	}
 
 	@Override
 	public String getTitle() {
-		return null;
+		return m_Title;
 	}
 
 	@Override
 	public String getBody() {
-		return null;
+		return m_Body;
 	}
-
+	
+	/**
+	 * @return Для MOMENT.BEGIN возвращает время создания; для 
+	 * MOMENT.END возвращает время последнего редактирования.
+	 */
 	@Override
 	public Date getDate(MOMENT time_moment) {
-		return null;
+		if (time_moment == MOMENT.BEGIN) {
+			return m_CreateDate;
+		}
+		return m_AlteredDate;
 	}
 
 	@Override
@@ -42,7 +51,13 @@ public class Note implements Item {
 
 	@Override
 	public List<String> getAttachments(TYPE type) {
-		return null;
+		ArrayDeque<String> attachList = null;
+		
+		if (!m_Attachments.isEmpty()) {
+			attachList = Utils.prepareList(m_Attachments);
+		}
+		
+		return (List<String>) attachList;
 	}
 
 }
