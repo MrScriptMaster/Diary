@@ -18,10 +18,11 @@ public class DbManager extends SQLiteOpenHelper {
 	private static final int DATABASE_VERSION = 1;
 	private static final String DATABASE_NAME = "AppDataBase.db";
 	
-	enum GET_BY {
-		TITLE,	// поиск по заголовкам
-		BODY,	// поиск по содержимому
-		DATE;	// поиск по дате
+	public enum _BY {
+		ID,		// 
+		TITLE,	// по заголовкам
+		BODY,	// по содержимому
+		DATE;	// по дате
 	}
 	
 	/**
@@ -37,8 +38,8 @@ public class DbManager extends SQLiteOpenHelper {
 		//		`event_id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
 		//		`event_title`	TEXT,
 		//		`event_desc`	TEXT,
-		//		`event_start`	NUMERIC,
-		//		`event_end`	NUMERIC,
+		//		`event_start`	TEXT,
+		//		`event_end`	    TEXT,
 		//		`event_place`	TEXT,
 		//		`event_is_periodic`	NUMERIC,
 		//		`event_picture`	TEXT,
@@ -48,8 +49,8 @@ public class DbManager extends SQLiteOpenHelper {
 				+ "%s INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,"
 				+ "%s TEXT,"
 				+ "%s TEXT,"
-				+ "%s NUMERIC,"
-				+ "%s NUMERIC,"
+				+ "%s TEXT,"
+				+ "%s TEXT,"
 				+ "%s TEXT,"
 				+ "%s NUMERIC,"
 				+ "%s TEXT,"
@@ -69,17 +70,17 @@ public class DbManager extends SQLiteOpenHelper {
 		//
 		//CREATE TABLE `notes` (
 		//		`note_id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-		//		`note_create_date`	NUMERIC,
-		//		`note_altered_date`	NUMERIC,
-		//		`note_title`	TEXT,
-		//		`note_body`	TEXT,
+		//		`note_create_date`	TEXT,
+		//		`note_altered_date`	TEXT,
+		//		`note_title`		TEXT,
+		//		`note_body`	        TEXT,
 		//		`note_attachments`	TEXT
 		//	)
 		//
 		String CREATE_NOTES_TABLE = String.format("CREATE TABLE %s ("
 				+ "%s INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,"
-				+ "%s NUMERIC,"
-				+ "%s NUMERIC,"
+				+ "%s TEXT,"
+				+ "%s TEXT,"
 				+ "%s TEXT,"
 				+ "%s TEXT,"
 				+ "%s TEXT )", 
@@ -135,6 +136,7 @@ public class DbManager extends SQLiteOpenHelper {
 								  String e_picture_path,
 								  String e_sound_path)
 	{
+		// TODO
 		/*
 		 * Дату и время вносить в соответствии с ISO-8601.
 		 * 
@@ -150,12 +152,93 @@ public class DbManager extends SQLiteOpenHelper {
 		return newEvent;
 	}
 	
-	public List<Item> getNotes(GET_BY criteria) {
+	/**
+	 * Создает новую заметку и заносит ее в базу данных.
+	 * 
+	 * @param n_title
+	 * @param n_body
+	 * @param n_attachs
+	 * @return
+	 */
+	public Note createNewNote(String n_title, String n_body, String n_attachs) {
+		// TODO
+		Note newNote = null;
+		
+		
+		return newNote;
+	}
+	
+	/**
+	 * Удалить запись(и) событий по критерию.
+	 * 
+	 * @param input
+	 * @param criteria - удалить можно по id по тексту в заголовке и по дате.
+	 * @return
+	 */
+	public int dropEventsBy(String input, _BY criteria) {
+		// TODO
+		int result = -1;		
+		
+		if (_BY.ID == criteria) {
+			
+		}
+		else if (_BY.TITLE == criteria) {
+			
+		}
+		else if (_BY.DATE == criteria) {
+			
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * Удалить запись(и) заметок по критерию.
+	 * 
+	 * @param input
+	 * @param criteria - удалить можно по id по тексту в заголовке и по дате.
+	 * @return
+	 */
+	public int dropNotesBy(String input, _BY criteria) {
+		// TODO
+		int result = -1;		
+		
+		if (_BY.ID == criteria) {
+			
+		}
+		
+		return result;
+	}
+	
+	public int dropAllDataFrom(String table) {
+		// TODO
+		int result = -1;
+		
+		return result;
+	}
+	
+	/**
+	 * Получить все записи c заметками по указанному критерию.
+	 * 
+	 * @param input
+	 * @param criteria - запросить можно по: дате, по заголовку, по содержимому.
+	 * @return Если запрос успешно выполнился, то возвращает совместимый с 
+	 * List список, иначе - null.
+	 */
+	public List<Item> getNotes(String input, _BY criteria) {
 		// TODO
 		return null;
 	}
 	
-	public List<Item> getEvents(GET_BY criteria) {
+	/**
+	 * Получить все записи с событиями по указанному критерию.
+	 * 
+	 * @param input
+	 * @param criteria - запросить можно по: дате начла события
+	 * @return Если запрос успешно выполнился, то возвращает совместимый с 
+	 * List список, иначе - null.
+	 */
+	public List<Item> getEvents(String input, _BY criteria) {
 		// TODO
 		return null;
 	}

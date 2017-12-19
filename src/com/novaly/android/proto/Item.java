@@ -86,6 +86,7 @@ class Utils {
 				else {
 					result = false;
 				}
+				date = null;
 			}
 			
 			// Проверка времени
@@ -108,6 +109,7 @@ class Utils {
 				else {
 					result = false;
 				}
+				time = null;
 			}
 		}
 		return result;
@@ -129,7 +131,8 @@ class Utils {
 			try {
 				result = sf.parse(input);
 			} catch (Exception e) {
-				
+				sf = null;
+				result = null;
 			}
 		}
 		return result;
@@ -148,6 +151,7 @@ class Utils {
 		if (null != input) {
 			SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 			result = sf.format(input);
+			sf = null;
 		}
 		return result;
 	}
