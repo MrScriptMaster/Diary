@@ -10,6 +10,7 @@ import com.novaly.android.proto.Event;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.SQLException;
 import android.content.ContentValues;
 
 import android.util.Log;
@@ -136,7 +137,6 @@ public class DbManager extends SQLiteOpenHelper {
 								  String e_picture_path,
 								  String e_sound_path)
 	{
-		// TODO
 		/*
 		 * Дату и время вносить в соответствии с ISO-8601.
 		 * 
@@ -144,10 +144,50 @@ public class DbManager extends SQLiteOpenHelper {
 		 */
 		Event newEvent = null;
 		
+		String strEventStart = Utils.date2str(e_start);
+		String strEventEnd = Utils.date2str(e_end);
+		
 		SQLiteDatabase db = this.getWritableDatabase();
 		ContentValues values = new ContentValues();
 		
-		values.put();
+		values.put(DbSchema.FeedEvent.COLUMN_NAME_TITLE, e_title);
+		values.put(DbSchema.FeedEvent.COLUMN_NAME_DESCRIPTION, e_description);
+		values.put(DbSchema.FeedEvent.COLUMN_NAME_EVENT_START, strEventStart);
+		values.put(DbSchema.FeedEvent.COLUMN_NAME_EVENT_END, strEventEnd);
+		values.put(DbSchema.FeedEvent.COLUMN_NAME_PLACE, e_place);
+		values.put(DbSchema.FeedEvent.COLUMN_NAME_FLAG_PERIODIC, e_is_periodic ? 1 : 0);
+		values.put(DbSchema.FeedEvent.COLUMN_NAME_PICTURE, e_picture_path);
+		values.put(DbSchema.FeedEvent.COLUMN_NAME_RING, e_sound_path);
+		
+		long SQL_result = -1;
+		
+		try {
+			if (!isDup(DbSchema.FeedEvent.TABLE_NAME, e_title, strEventStart, strEventEnd, e_is_periodic))
+			{
+				SQL_result = db.insertOrThrow(DbSchema.FeedEvent.TABLE_NAME, null, values);
+				long _id = -1;
+				
+				newEvent = new Event();
+				newEvent.m_Title = e_title;
+				newEvent.m_Description = e_description;
+				newEvent.m_Start = e_start;
+				newEvent.m_End = e_end;
+				newEvent.m_Place = e_place;
+				newEvent.m_Is_Periodic = e_is_periodic;
+				newEvent.m_PicturePath = e_picture_path;
+				newEvent.m_SoundPath = e_sound_path;
+				newEvent.m_Id = _id = getRowId(DbSchema.FeedEvent.TABLE_NAME, newEvent);
+				Log.d("DEBUG", "New event has id = " + _id);
+			}
+			else {
+				throw new Exception("Trying duplication of event (or an another problem)");
+			}
+			
+		} catch (android.database.SQLException e) {
+			Log.d("DEBUG", "Create event failed. SQL code = " + SQL_result);
+		} catch (Exception e) {
+			Log.d("DEBUG", e.getMessage());
+		}
 		
 		return newEvent;
 	}
@@ -196,7 +236,7 @@ public class DbManager extends SQLiteOpenHelper {
 	 * Удалить запись(и) заметок по критерию.
 	 * 
 	 * @param input
-	 * @param criteria - удалить можно по id по тексту в заголовке и по дате.
+	 * @param criteria - удалить можно по id и тексту в заголовке.
 	 * @return
 	 */
 	public int dropNotesBy(String input, _BY criteria) {
@@ -241,5 +281,99 @@ public class DbManager extends SQLiteOpenHelper {
 	public List<Item> getEvents(String input, _BY criteria) {
 		// TODO
 		return null;
+	}
+	
+	/**
+	 * Проверка дубликатов записей.
+	 * 
+	 * @param e_title
+	 * @param e_description
+	 * @param e_place
+	 * @param e_start
+	 * @param e_end
+	 * @param e_is_periodic
+	 * @param e_picture_path
+	 * @param e_sound_path
+	 * @return Возвращает false, если записей с такими значениями не существует.
+	 */
+	final private boolean isDup(String table,
+			  String e_title, 
+			  String e_start, String e_end,
+			  boolean e_is_periodic)
+	{
+		// TODO
+		boolean result = false;
+		String id_field = null;
+		String title_field = null;
+		String start_field = null;
+		String stop_field = null;
+		String periodic_field = null;
+		
+		// bad solution
+		if (table == DbSchema.FeedEvent.TABLE_NAME) {
+			id_field = DbSchema.FeedEvent.COLUMN_NAME_ENTRY_ID;
+			title_field = DbSchema.FeedEvent.COLUMN_NAME_TITLE;
+			start_field = DbSchema.FeedEvent.COLUMN_NAME_EVENT_START;
+			stop_field = DbSchema.FeedEvent.COLUMN_NAME_EVENT_END;
+			periodic_field = DbSchema.FeedEvent.COLUMN_NAME_FLAG_PERIODIC;
+		} 
+		else if (table == DbSchema.FeedNote.TABLE_NAME) {
+			id_field = DbSchema.FeedNote.COLUMN_NAME_ENTRY_ID;
+			title_field = DbSchema.FeedNote.COLUMN_NAME_TITLE;
+			start_field = DbSchema.FeedNote.COLUMN_NAME_CREATE_DATE;
+			stop_field = DbSchema.FeedNote.COLUMN_NAME_ALTERED_DATE;
+			periodic_field = null;
+		}
+		else {
+			return true;
+		}
+		//---------------
+		
+		SQLiteDatabase db = this.getWritableDatabase();
+		
+		try {
+			Cursor cursor = null; 
+			if (table == DbSchema.FeedEvent.TABLE_NAME) {
+				db.query(
+						table,
+						new String[] {
+							id_field
+						},
+						String.format("%s= AND ", args)
+						);
+			}
+			else if (table == DbSchema.FeedNote.TABLE_NAME) {
+				db.query(
+						table,
+						new String[] {
+							id_field
+						},
+						
+						);
+			}
+			else {
+				throw new Exception(table + " is not supported");
+			}
+
+		} catch (Exception e) {
+			Log.d("DEBUG", e.getMessage());
+			result = true;
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * Вернуть индекс записи в БД.
+	 * 
+	 * @param table_name
+	 * @param ev
+	 * @return
+	 */
+	final private long getRowId(String table_name, Event ev) {
+		// TODO
+		long result = -1;
+		
+		return result;
 	}
 }

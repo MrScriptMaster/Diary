@@ -131,9 +131,9 @@ class Utils {
 			try {
 				result = sf.parse(input);
 			} catch (Exception e) {
-				sf = null;
 				result = null;
 			}
+			sf = null;
 		}
 		return result;
 	}
