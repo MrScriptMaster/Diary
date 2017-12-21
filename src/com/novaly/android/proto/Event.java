@@ -7,14 +7,14 @@ import java.util.List;
 public class Event implements Item {
 	
 	public long    m_Id = -1;
-	public String  m_Title;
-	public String  m_Description;
-	public Date    m_Start;
-	public Date    m_End;
-	public String  m_Place;
+	public String  m_Title = null;
+	public String  m_Description = null;
+	public Date    m_Start = null;
+	public Date    m_End = null;
+	public String  m_Place = null;
 	public boolean m_Is_Periodic = false;
-	public String  m_PicturePath;
-	public String  m_SoundPath;
+	public String  m_PicturePath = null;
+	public String  m_SoundPath = null;
 	
 	public Event() { }
 	
@@ -52,9 +52,9 @@ public class Event implements Item {
 	public List<String> getAttachments(TYPE type) {
 		ArrayDeque<String> attachList = null;
 		if (!m_PicturePath.isEmpty() && !m_SoundPath.isEmpty()) {
-			if (type == TYPE.TYPE_PICTURE) {
+			if (type == TYPE.TYPE_PICTURE && m_PicturePath != null) {
 				attachList = Utils.prepareList(m_PicturePath);
-			} else if (type == TYPE.TYPE_SOUND) {
+			} else if (type == TYPE.TYPE_SOUND && m_SoundPath != null) {
 				attachList = Utils.prepareList(m_SoundPath);
 			}
 		}

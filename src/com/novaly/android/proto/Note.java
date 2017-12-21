@@ -7,11 +7,11 @@ import java.util.List;
 public class Note implements Item {
 	
 	public long    m_Id = -1;
-	public String  m_Title;
-	public Date	   m_CreateDate;
-	public Date    m_AlteredDate;
-	public String  m_Body;
-	public String  m_Attachments;
+	public String  m_Title = null;
+	public Date	   m_CreateDate = null;
+	public Date    m_AlteredDate = null;
+	public String  m_Body = null;
+	public String  m_Attachments = null;
 	
 	public Note() {
 		
@@ -53,7 +53,7 @@ public class Note implements Item {
 	public List<String> getAttachments(TYPE type) {
 		ArrayDeque<String> attachList = null;
 		
-		if (!m_Attachments.isEmpty()) {
+		if (m_Attachments != null && !m_Attachments.isEmpty()) {
 			attachList = Utils.prepareList(m_Attachments);
 		}
 		

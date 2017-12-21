@@ -162,7 +162,7 @@ public class DbManager extends SQLiteOpenHelper {
 		long SQL_result = -1;
 		
 		try {
-			if (!isDup(DbSchema.FeedEvent.TABLE_NAME, e_title, strEventStart, strEventEnd, e_is_periodic))
+			if (isAvailable(DbSchema.FeedEvent.TABLE_NAME, e_title, strEventStart, strEventEnd, e_is_periodic))
 			{
 				SQL_result = db.insertOrThrow(DbSchema.FeedEvent.TABLE_NAME, null, values);
 				long _id = -1;
@@ -176,11 +176,12 @@ public class DbManager extends SQLiteOpenHelper {
 				newEvent.m_Is_Periodic = e_is_periodic;
 				newEvent.m_PicturePath = e_picture_path;
 				newEvent.m_SoundPath = e_sound_path;
-				newEvent.m_Id = _id = getRowId(DbSchema.FeedEvent.TABLE_NAME, newEvent);
+				Log.d("DEBUG", "Request an id");
+				newEvent.m_Id = _id = getRowId((Item) newEvent);
 				Log.d("DEBUG", "New event has id = " + _id);
 			}
 			else {
-				throw new Exception("Trying duplication of event (or an another problem)");
+				throw new Exception("Creation of an event is not available");
 			}
 			
 		} catch (android.database.SQLException e) {
@@ -223,10 +224,10 @@ public class DbManager extends SQLiteOpenHelper {
 			
 		}
 		else if (_BY.TITLE == criteria) {
-			
+			Log.d("DEBUG", "No realized");
 		}
 		else if (_BY.DATE == criteria) {
-			
+			Log.d("DEBUG", "No realized");
 		}
 		
 		return result;
@@ -284,80 +285,141 @@ public class DbManager extends SQLiteOpenHelper {
 	}
 	
 	/**
+	 * Обновить поля в указанных колонках. В качестве критерия поиска используется id записи.
+	 * Колонки нужно передавать
+	 * текстовым списком, в котором используется разделитель ','. Не рекомендуется
+	 * использовать пробелы. Замена значений будет производиться только для
+	 * колонок указанных и существующих в списке имен колонок. Для
+	 * ссылок null значение будет затираться.
+	 * 
+	 * @param ev - структура с обновленным полем
+	 * @param columns - перечень имен колонок, разделенных запятыми
+	 * @return Возвращает код SQL-запроса.
+	 */
+	public int updateEvent(Event ev, String columns) {
+		//TODO
+		int result = -1;
+		SQLiteDatabase db = this.getWritableDatabase();
+		
+		
+		return result;
+	}
+	
+	/**
+	 * Обновить поле заметки.
+	 * 
+	 * @param nt - структура с измененным полем
+	 * @param columnName - поддерживаются все колонки, кроме индекса и дат
+	 * @return
+	 */
+	public int updateNote(Note nt, String columnName) {
+		//TODO
+		int result = -1;
+		
+		return result;
+	}
+	
+	/**
 	 * Проверка дубликатов записей.
 	 * 
-	 * @param e_title
-	 * @param e_description
-	 * @param e_place
-	 * @param e_start
-	 * @param e_end
-	 * @param e_is_periodic
-	 * @param e_picture_path
-	 * @param e_sound_path
-	 * @return Возвращает false, если записей с такими значениями не существует.
+	 * @param e_title - заголовок
+	 * @param e_start - в контесте события - начало; в контексте заметки - момент создания
+	 * @param e_end - в контексте события - конец; в контексте заметки - не используется
+	 * @param e_is_periodic - в контексте собвтия - флаг периодичности; в контексте заметки - не используется 
+	 * @return Возвращает true, если записей с такими значениями не существует. Возвращает
+	 * false, когда есть дубликат или создание по каким-либо причинам невозможно.
 	 */
-	final private boolean isDup(String table,
+	final private boolean isAvailable(String table,
 			  String e_title, 
 			  String e_start, String e_end,
 			  boolean e_is_periodic)
 	{
-		// TODO
 		boolean result = false;
 		String id_field = null;
 		String title_field = null;
 		String start_field = null;
 		String stop_field = null;
 		String periodic_field = null;
-		
-		// bad solution
-		if (table == DbSchema.FeedEvent.TABLE_NAME) {
-			id_field = DbSchema.FeedEvent.COLUMN_NAME_ENTRY_ID;
-			title_field = DbSchema.FeedEvent.COLUMN_NAME_TITLE;
-			start_field = DbSchema.FeedEvent.COLUMN_NAME_EVENT_START;
-			stop_field = DbSchema.FeedEvent.COLUMN_NAME_EVENT_END;
-			periodic_field = DbSchema.FeedEvent.COLUMN_NAME_FLAG_PERIODIC;
-		} 
-		else if (table == DbSchema.FeedNote.TABLE_NAME) {
-			id_field = DbSchema.FeedNote.COLUMN_NAME_ENTRY_ID;
-			title_field = DbSchema.FeedNote.COLUMN_NAME_TITLE;
-			start_field = DbSchema.FeedNote.COLUMN_NAME_CREATE_DATE;
-			stop_field = DbSchema.FeedNote.COLUMN_NAME_ALTERED_DATE;
-			periodic_field = null;
-		}
-		else {
-			return true;
-		}
-		//---------------
-		
 		SQLiteDatabase db = this.getWritableDatabase();
-		
-		try {
-			Cursor cursor = null; 
-			if (table == DbSchema.FeedEvent.TABLE_NAME) {
-				db.query(
-						table,
-						new String[] {
-							id_field
-						},
-						String.format("%s= AND ", args)
-						);
-			}
-			else if (table == DbSchema.FeedNote.TABLE_NAME) {
-				db.query(
-						table,
-						new String[] {
-							id_field
-						},
-						
-						);
+		Cursor cursor = null;
+		try {		
+			// bad solution
+			if (table == DbSchema.FeedEvent.TABLE_NAME) 
+			{
+				id_field = DbSchema.FeedEvent.COLUMN_NAME_ENTRY_ID;
+				title_field = DbSchema.FeedEvent.COLUMN_NAME_TITLE;
+				start_field = DbSchema.FeedEvent.COLUMN_NAME_EVENT_START;
+				stop_field = DbSchema.FeedEvent.COLUMN_NAME_EVENT_END;
+				periodic_field = DbSchema.FeedEvent.COLUMN_NAME_FLAG_PERIODIC;
+			} 
+			else if (table == DbSchema.FeedNote.TABLE_NAME) 
+			{
+				id_field = DbSchema.FeedNote.COLUMN_NAME_ENTRY_ID;
+				title_field = DbSchema.FeedNote.COLUMN_NAME_TITLE;
+				start_field = DbSchema.FeedNote.COLUMN_NAME_CREATE_DATE;
+				stop_field = null;
+				periodic_field = null;
 			}
 			else {
 				throw new Exception(table + " is not supported");
 			}
-
+			//---------------
+			Log.d("DEBUG", "Trying catch a cursor for " + table);
+			int rowCounter = 0;
+			if (table == DbSchema.FeedEvent.TABLE_NAME) {
+				cursor = db.query(
+						table,
+		/*SELECT*/	    new String[] {
+							id_field
+						},
+		/*WHERE*/	    String.format("%s= ? AND %s= ? AND %s= ? AND %s= ?", 
+						title_field, start_field, stop_field, periodic_field),
+						new String[] {e_title, e_start, e_end, Integer.toString(e_is_periodic ? 1 : 0)},
+		/*GROUP BY*/	null,
+		/*HAVING*/		null,
+		/*ORDER BY*/	null,
+		/*LIMIT*/		Integer.toString(2)
+						);
+				if (cursor) {
+					rowCounter = cursor.getCount();
+				}
+			}
+			else if (table == DbSchema.FeedNote.TABLE_NAME) {
+				cursor = db.query(
+						table,
+		/*SELECT*/	    new String[] {
+							id_field
+						},
+		/*WHERE*/	    String.format("%s= ? AND %s= ?", 
+						title_field, start_field),
+						new String[] {e_title, e_start},
+		/*GROUP BY*/	null,
+		/*HAVING*/		null,
+		/*ORDER BY*/	null,
+		/*LIMIT*/		Integer.toString(2)
+						);
+				if (cursor) {
+					rowCounter = cursor.getCount();
+				}
+			}
+			
+			if (rowCounter != 0) {
+				result = false;
+				Log.d("DEBUG", "It was found a dup");
+			}
+			else {
+				result = true;
+				Log.d("DEBUG", "It wasn't found a dup");
+			}
+			
 		} catch (Exception e) {
 			Log.d("DEBUG", e.getMessage());
-			result = true;
+			result = false;
+		} finally {
+			if (cursor) {
+				cursor.close();
+				Log.d("DEBUG", "Cursor is closed");
+			}
 		}
 		
 		return result;
@@ -366,13 +428,67 @@ public class DbManager extends SQLiteOpenHelper {
 	/**
 	 * Вернуть индекс записи в БД.
 	 * 
-	 * @param table_name
-	 * @param ev
-	 * @return
+	 * @param item - структура интерфейса Item. Поддерживаются
+	 * только события и заметки.
+	 * @return Возвращает индекс записи, который присвоила база данных после регистрации.
 	 */
-	final private long getRowId(String table_name, Event ev) {
-		// TODO
+	final private long getRowId(Item item) {
 		long result = -1;
+		SQLiteDatabase db = this.getWritableDatabase();
+		Cursor cursor = null;
+		try {
+			if (null != item) {
+				if (item.type() == TYPE.TYPE_EVENT) {
+					Event ev = (Event) item;
+					cursor = db.query(
+							DbSchema.FeedEvent.TABLE_NAME,
+			/*SELECT*/	    new String[] {
+								DbSchema.FeedEvent.COLUMN_NAME_ENTRY_ID
+							},
+			/*WHERE*/	    String.format("%s= ? AND %s= ? AND %s= ? AND %s= ?", 
+								DbSchema.FeedEvent.COLUMN_NAME_TITLE, 
+								DbSchema.FeedEvent.COLUMN_NAME_EVENT_START, 
+								DbSchema.FeedEvent.COLUMN_NAME_EVENT_END, 
+								DbSchema.FeedEvent.COLUMN_NAME_FLAG_PERIODIC),
+							new String[] {ev.m_Title, Utils.date2str(ev.m_Start), 
+								Utils.date2str(ev.m_End), Integer.toString(ev.isPeriodic() ? 1 : 0)},
+			/*GROUP BY*/	null,
+			/*HAVING*/		null,
+			/*ORDER BY*/	null,
+			/*LIMIT*/		Integer.toString(1)
+							);				
+				}
+				else if (item.type() == TYPE.TYPE_NOTE) {
+					Note nt = (Note) item;
+					cursor = db.query(
+							DbSchema.FeedNote.TABLE_NAME,
+			/*SELECT*/	    new String[] {
+								DbSchema.FeedNote.COLUMN_NAME_ENTRY_ID
+							},
+			/*WHERE*/	    String.format("%s= ? AND %s= ?", 
+								DbSchema.FeedNote.COLUMN_NAME_TITLE,
+								DbSchema.FeedNote.COLUMN_NAME_CREATE_DATE),
+							new String[] {nt.m_Title, Utils.date2str(nt.m_CreateDate)},
+			/*GROUP BY*/	null,
+			/*HAVING*/		null,
+			/*ORDER BY*/	null,
+			/*LIMIT*/		Integer.toString(1)
+							);
+				}
+				if (null != cursor) {
+					if (cursor.moveToFirst()) {
+						result = cursor.getInt(0);
+					}
+				}
+			}
+		} catch (Exception e) {
+			Log.d("DEBUG", e.getMessage());
+		} finally {
+			if (cursor) {
+				cursor.close();
+			}
+		}
+		Log.d("DEBUG", "Request for ID returned " + result);
 		
 		return result;
 	}
