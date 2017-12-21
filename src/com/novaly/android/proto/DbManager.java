@@ -147,47 +147,53 @@ public class DbManager extends SQLiteOpenHelper {
 		String strEventStart = Utils.date2str(e_start);
 		String strEventEnd = Utils.date2str(e_end);
 		
-		SQLiteDatabase db = this.getWritableDatabase();
-		ContentValues values = new ContentValues();
-		
-		values.put(DbSchema.FeedEvent.COLUMN_NAME_TITLE, e_title);
-		values.put(DbSchema.FeedEvent.COLUMN_NAME_DESCRIPTION, e_description);
-		values.put(DbSchema.FeedEvent.COLUMN_NAME_EVENT_START, strEventStart);
-		values.put(DbSchema.FeedEvent.COLUMN_NAME_EVENT_END, strEventEnd);
-		values.put(DbSchema.FeedEvent.COLUMN_NAME_PLACE, e_place);
-		values.put(DbSchema.FeedEvent.COLUMN_NAME_FLAG_PERIODIC, e_is_periodic ? 1 : 0);
-		values.put(DbSchema.FeedEvent.COLUMN_NAME_PICTURE, e_picture_path);
-		values.put(DbSchema.FeedEvent.COLUMN_NAME_RING, e_sound_path);
-		
-		long SQL_result = -1;
-		
+		SQLiteDatabase db = null;
 		try {
-			if (isAvailable(DbSchema.FeedEvent.TABLE_NAME, e_title, strEventStart, strEventEnd, e_is_periodic))
-			{
-				SQL_result = db.insertOrThrow(DbSchema.FeedEvent.TABLE_NAME, null, values);
-				long _id = -1;
-				
-				newEvent = new Event();
-				newEvent.m_Title = e_title;
-				newEvent.m_Description = e_description;
-				newEvent.m_Start = e_start;
-				newEvent.m_End = e_end;
-				newEvent.m_Place = e_place;
-				newEvent.m_Is_Periodic = e_is_periodic;
-				newEvent.m_PicturePath = e_picture_path;
-				newEvent.m_SoundPath = e_sound_path;
-				Log.d("DEBUG", "Request an id");
-				newEvent.m_Id = _id = getRowId((Item) newEvent);
-				Log.d("DEBUG", "New event has id = " + _id);
-			}
-			else {
-				throw new Exception("Creation of an event is not available");
-			}
+			SQLiteDatabase db = this.getWritableDatabase();
+			ContentValues values = new ContentValues();
 			
-		} catch (android.database.SQLException e) {
-			Log.d("DEBUG", "Create event failed. SQL code = " + SQL_result);
-		} catch (Exception e) {
-			Log.d("DEBUG", e.getMessage());
+			values.put(DbSchema.FeedEvent.COLUMN_NAME_TITLE, e_title);
+			values.put(DbSchema.FeedEvent.COLUMN_NAME_DESCRIPTION, e_description);
+			values.put(DbSchema.FeedEvent.COLUMN_NAME_EVENT_START, strEventStart);
+			values.put(DbSchema.FeedEvent.COLUMN_NAME_EVENT_END, strEventEnd);
+			values.put(DbSchema.FeedEvent.COLUMN_NAME_PLACE, e_place);
+			values.put(DbSchema.FeedEvent.COLUMN_NAME_FLAG_PERIODIC, e_is_periodic ? 1 : 0);
+			values.put(DbSchema.FeedEvent.COLUMN_NAME_PICTURE, e_picture_path);
+			values.put(DbSchema.FeedEvent.COLUMN_NAME_RING, e_sound_path);
+			
+			long SQL_result = -1;
+			
+			try {
+				if (isAvailable(DbSchema.FeedEvent.TABLE_NAME, e_title, strEventStart, strEventEnd, e_is_periodic))
+				{
+					SQL_result = db.insertOrThrow(DbSchema.FeedEvent.TABLE_NAME, null, values);
+					long _id = -1;
+					
+					newEvent = new Event();
+					newEvent.m_Title = e_title;
+					newEvent.m_Description = e_description;
+					newEvent.m_Start = e_start;
+					newEvent.m_End = e_end;
+					newEvent.m_Place = e_place;
+					newEvent.m_Is_Periodic = e_is_periodic;
+					newEvent.m_PicturePath = e_picture_path;
+					newEvent.m_SoundPath = e_sound_path;
+					Log.d("DEBUG", "Request an id");
+					newEvent.m_Id = _id = getRowId((Item) newEvent);
+					Log.d("DEBUG", "New event has id = " + _id);
+				}
+				else {
+					throw new Exception("Creation of an event is not available");
+				}
+				
+			} catch (android.database.SQLException e) {
+				Log.d("DEBUG", "Create event failed. SQL code = " + SQL_result);
+			} catch (Exception e) {
+				Log.d("DEBUG", e.getMessage());
+			}
+		} finally {
+			if (db) 
+				db.close();
 		}
 		
 		return newEvent;
@@ -299,8 +305,15 @@ public class DbManager extends SQLiteOpenHelper {
 	public int updateEvent(Event ev, String columns) {
 		//TODO
 		int result = -1;
-		SQLiteDatabase db = this.getWritableDatabase();
+		SQLiteDatabase db = null;
 		
+		try {
+			db = this.getWritableDatabase();
+			ContentValues values = new ContentValues();
+		} finally {
+			if (db) 
+				db.close();
+		}
 		
 		return result;
 	}
@@ -340,86 +353,92 @@ public class DbManager extends SQLiteOpenHelper {
 		String start_field = null;
 		String stop_field = null;
 		String periodic_field = null;
-		SQLiteDatabase db = this.getWritableDatabase();
-		Cursor cursor = null;
-		try {		
-			// bad solution
-			if (table == DbSchema.FeedEvent.TABLE_NAME) 
-			{
-				id_field = DbSchema.FeedEvent.COLUMN_NAME_ENTRY_ID;
-				title_field = DbSchema.FeedEvent.COLUMN_NAME_TITLE;
-				start_field = DbSchema.FeedEvent.COLUMN_NAME_EVENT_START;
-				stop_field = DbSchema.FeedEvent.COLUMN_NAME_EVENT_END;
-				periodic_field = DbSchema.FeedEvent.COLUMN_NAME_FLAG_PERIODIC;
-			} 
-			else if (table == DbSchema.FeedNote.TABLE_NAME) 
-			{
-				id_field = DbSchema.FeedNote.COLUMN_NAME_ENTRY_ID;
-				title_field = DbSchema.FeedNote.COLUMN_NAME_TITLE;
-				start_field = DbSchema.FeedNote.COLUMN_NAME_CREATE_DATE;
-				stop_field = null;
-				periodic_field = null;
-			}
-			else {
-				throw new Exception(table + " is not supported");
-			}
-			//---------------
-			Log.d("DEBUG", "Trying catch a cursor for " + table);
-			int rowCounter = 0;
-			if (table == DbSchema.FeedEvent.TABLE_NAME) {
-				cursor = db.query(
-						table,
-		/*SELECT*/	    new String[] {
-							id_field
-						},
-		/*WHERE*/	    String.format("%s= ? AND %s= ? AND %s= ? AND %s= ?", 
-						title_field, start_field, stop_field, periodic_field),
-						new String[] {e_title, e_start, e_end, Integer.toString(e_is_periodic ? 1 : 0)},
-		/*GROUP BY*/	null,
-		/*HAVING*/		null,
-		/*ORDER BY*/	null,
-		/*LIMIT*/		Integer.toString(2)
-						);
-				if (cursor) {
-					rowCounter = cursor.getCount();
+		SQLiteDatabase db = null;
+		try {	
+			db = this.getWritableDatabase();
+			Cursor cursor = null;
+			try {		
+				// bad solution
+				if (table == DbSchema.FeedEvent.TABLE_NAME) 
+				{
+					id_field = DbSchema.FeedEvent.COLUMN_NAME_ENTRY_ID;
+					title_field = DbSchema.FeedEvent.COLUMN_NAME_TITLE;
+					start_field = DbSchema.FeedEvent.COLUMN_NAME_EVENT_START;
+					stop_field = DbSchema.FeedEvent.COLUMN_NAME_EVENT_END;
+					periodic_field = DbSchema.FeedEvent.COLUMN_NAME_FLAG_PERIODIC;
+				} 
+				else if (table == DbSchema.FeedNote.TABLE_NAME) 
+				{
+					id_field = DbSchema.FeedNote.COLUMN_NAME_ENTRY_ID;
+					title_field = DbSchema.FeedNote.COLUMN_NAME_TITLE;
+					start_field = DbSchema.FeedNote.COLUMN_NAME_CREATE_DATE;
+					stop_field = null;
+					periodic_field = null;
 				}
-			}
-			else if (table == DbSchema.FeedNote.TABLE_NAME) {
-				cursor = db.query(
-						table,
-		/*SELECT*/	    new String[] {
-							id_field
-						},
-		/*WHERE*/	    String.format("%s= ? AND %s= ?", 
-						title_field, start_field),
-						new String[] {e_title, e_start},
-		/*GROUP BY*/	null,
-		/*HAVING*/		null,
-		/*ORDER BY*/	null,
-		/*LIMIT*/		Integer.toString(2)
-						);
-				if (cursor) {
-					rowCounter = cursor.getCount();
+				else {
+					throw new Exception(table + " is not supported");
 				}
-			}
-			
-			if (rowCounter != 0) {
+				//---------------
+				Log.d("DEBUG", "Trying catch a cursor for " + table);
+				int rowCounter = 0;
+				if (table == DbSchema.FeedEvent.TABLE_NAME) {
+					cursor = db.query(
+							table,
+			/*SELECT*/	    new String[] {
+								id_field
+							},
+			/*WHERE*/	    String.format("%s= ? AND %s= ? AND %s= ? AND %s= ?", 
+							title_field, start_field, stop_field, periodic_field),
+							new String[] {e_title, e_start, e_end, Integer.toString(e_is_periodic ? 1 : 0)},
+			/*GROUP BY*/	null,
+			/*HAVING*/		null,
+			/*ORDER BY*/	null,
+			/*LIMIT*/		Integer.toString(2)
+							);
+					if (cursor) {
+						rowCounter = cursor.getCount();
+					}
+				}
+				else if (table == DbSchema.FeedNote.TABLE_NAME) {
+					cursor = db.query(
+							table,
+			/*SELECT*/	    new String[] {
+								id_field
+							},
+			/*WHERE*/	    String.format("%s= ? AND %s= ?", 
+							title_field, start_field),
+							new String[] {e_title, e_start},
+			/*GROUP BY*/	null,
+			/*HAVING*/		null,
+			/*ORDER BY*/	null,
+			/*LIMIT*/		Integer.toString(2)
+							);
+					if (cursor) {
+						rowCounter = cursor.getCount();
+					}
+				}
+				
+				if (rowCounter != 0) {
+					result = false;
+					Log.d("DEBUG", "It was found a dup");
+				}
+				else {
+					result = true;
+					Log.d("DEBUG", "It wasn't found a dup");
+				}
+				
+			} catch (Exception e) {
+				Log.d("DEBUG", e.getMessage());
 				result = false;
-				Log.d("DEBUG", "It was found a dup");
+			} finally {
+				if (cursor) {
+					cursor.close();
+					Log.d("DEBUG", "Cursor is closed");
+				}
 			}
-			else {
-				result = true;
-				Log.d("DEBUG", "It wasn't found a dup");
-			}
-			
-		} catch (Exception e) {
-			Log.d("DEBUG", e.getMessage());
-			result = false;
 		} finally {
-			if (cursor) {
-				cursor.close();
-				Log.d("DEBUG", "Cursor is closed");
-			}
+			if (db)
+				db.close();
 		}
 		
 		return result;
@@ -434,59 +453,65 @@ public class DbManager extends SQLiteOpenHelper {
 	 */
 	final private long getRowId(Item item) {
 		long result = -1;
-		SQLiteDatabase db = this.getWritableDatabase();
-		Cursor cursor = null;
+		SQLiteDatabase db = null;
 		try {
-			if (null != item) {
-				if (item.type() == TYPE.TYPE_EVENT) {
-					Event ev = (Event) item;
-					cursor = db.query(
-							DbSchema.FeedEvent.TABLE_NAME,
-			/*SELECT*/	    new String[] {
-								DbSchema.FeedEvent.COLUMN_NAME_ENTRY_ID
-							},
-			/*WHERE*/	    String.format("%s= ? AND %s= ? AND %s= ? AND %s= ?", 
-								DbSchema.FeedEvent.COLUMN_NAME_TITLE, 
-								DbSchema.FeedEvent.COLUMN_NAME_EVENT_START, 
-								DbSchema.FeedEvent.COLUMN_NAME_EVENT_END, 
-								DbSchema.FeedEvent.COLUMN_NAME_FLAG_PERIODIC),
-							new String[] {ev.m_Title, Utils.date2str(ev.m_Start), 
-								Utils.date2str(ev.m_End), Integer.toString(ev.isPeriodic() ? 1 : 0)},
-			/*GROUP BY*/	null,
-			/*HAVING*/		null,
-			/*ORDER BY*/	null,
-			/*LIMIT*/		Integer.toString(1)
-							);				
-				}
-				else if (item.type() == TYPE.TYPE_NOTE) {
-					Note nt = (Note) item;
-					cursor = db.query(
-							DbSchema.FeedNote.TABLE_NAME,
-			/*SELECT*/	    new String[] {
-								DbSchema.FeedNote.COLUMN_NAME_ENTRY_ID
-							},
-			/*WHERE*/	    String.format("%s= ? AND %s= ?", 
-								DbSchema.FeedNote.COLUMN_NAME_TITLE,
-								DbSchema.FeedNote.COLUMN_NAME_CREATE_DATE),
-							new String[] {nt.m_Title, Utils.date2str(nt.m_CreateDate)},
-			/*GROUP BY*/	null,
-			/*HAVING*/		null,
-			/*ORDER BY*/	null,
-			/*LIMIT*/		Integer.toString(1)
-							);
-				}
-				if (null != cursor) {
-					if (cursor.moveToFirst()) {
-						result = cursor.getInt(0);
+			db = this.getWritableDatabase();
+			Cursor cursor = null;
+			try {
+				if (null != item) {
+					if (item.type() == TYPE.TYPE_EVENT) {
+						Event ev = (Event) item;
+						cursor = db.query(
+								DbSchema.FeedEvent.TABLE_NAME,
+				/*SELECT*/	    new String[] {
+									DbSchema.FeedEvent.COLUMN_NAME_ENTRY_ID
+								},
+				/*WHERE*/	    String.format("%s= ? AND %s= ? AND %s= ? AND %s= ?", 
+									DbSchema.FeedEvent.COLUMN_NAME_TITLE, 
+									DbSchema.FeedEvent.COLUMN_NAME_EVENT_START, 
+									DbSchema.FeedEvent.COLUMN_NAME_EVENT_END, 
+									DbSchema.FeedEvent.COLUMN_NAME_FLAG_PERIODIC),
+								new String[] {ev.m_Title, Utils.date2str(ev.m_Start), 
+									Utils.date2str(ev.m_End), Integer.toString(ev.isPeriodic() ? 1 : 0)},
+				/*GROUP BY*/	null,
+				/*HAVING*/		null,
+				/*ORDER BY*/	null,
+				/*LIMIT*/		Integer.toString(1)
+								);				
+					}
+					else if (item.type() == TYPE.TYPE_NOTE) {
+						Note nt = (Note) item;
+						cursor = db.query(
+								DbSchema.FeedNote.TABLE_NAME,
+				/*SELECT*/	    new String[] {
+									DbSchema.FeedNote.COLUMN_NAME_ENTRY_ID
+								},
+				/*WHERE*/	    String.format("%s= ? AND %s= ?", 
+									DbSchema.FeedNote.COLUMN_NAME_TITLE,
+									DbSchema.FeedNote.COLUMN_NAME_CREATE_DATE),
+								new String[] {nt.m_Title, Utils.date2str(nt.m_CreateDate)},
+				/*GROUP BY*/	null,
+				/*HAVING*/		null,
+				/*ORDER BY*/	null,
+				/*LIMIT*/		Integer.toString(1)
+								);
+					}
+					if (null != cursor) {
+						if (cursor.moveToFirst()) {
+							result = cursor.getInt(0);
+						}
 					}
 				}
+			} catch (Exception e) {
+				Log.d("DEBUG", e.getMessage());
+			} finally {
+				if (cursor) {
+					cursor.close();
+				}
 			}
-		} catch (Exception e) {
-			Log.d("DEBUG", e.getMessage());
 		} finally {
-			if (cursor) {
-				cursor.close();
-			}
+			if (db)
+				db.close();
 		}
 		Log.d("DEBUG", "Request for ID returned " + result);
 		
