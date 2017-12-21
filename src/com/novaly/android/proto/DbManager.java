@@ -210,7 +210,13 @@ public class DbManager extends SQLiteOpenHelper {
 	public Note createNewNote(String n_title, String n_body, String n_attachs) {
 		// TODO
 		Note newNote = null;
-		
+		SQLiteDatabase db = null;
+		try {
+			
+		} finally {
+			if (db)
+				db.close();
+		}
 		
 		return newNote;
 	}
@@ -328,6 +334,14 @@ public class DbManager extends SQLiteOpenHelper {
 	public int updateNote(Note nt, String columnName) {
 		//TODO
 		int result = -1;
+		SQLiteDatabase db = null;
+		
+		try {
+			
+		} finally {
+			if (db)
+				db.close();
+		}
 		
 		return result;
 	}
