@@ -309,19 +309,106 @@ public class DbManager extends SQLiteOpenHelper {
 	 * @return Возвращает код SQL-запроса.
 	 */
 	public int updateEvent(Event ev, String columns) {
-		//TODO
-		int result = -1;
+		int SQL_result = -1;
 		SQLiteDatabase db = null;
-		
 		try {
-			db = this.getWritableDatabase();
-			ContentValues values = new ContentValues();
-		} finally {
-			if (db) 
-				db.close();
+			List<String> cols = (List<String>) Utils.prepareList(columns);	
+			if (cols.isEmpty()) {
+				throw new Exception("List of columns is empty");
+			}
+			if (null != ev) {
+				if (ev.m_Id <= 0) {
+					throw new Exception("Bad id in request: " + ev.m_Id);
+				}
+			}
+			else {
+				throw new Exception("Event is null");
+			}
+
+			try {
+				db = this.getWritableDatabase();
+				ContentValues values = new ContentValues();
+				
+				for (String columnName : cols) {
+					if (DbSchema.FeedEvent.COLUMN_NAME_TITLE == columnName) {
+						if (ev.m_Title != null) {
+							values.put(DbSchema.FeedEvent.COLUMN_NAME_TITLE, ev.m_Title);
+						}
+						else {
+							values.put(DbSchema.FeedEvent.COLUMN_NAME_TITLE, "");
+						}
+					}
+					else if (DbSchema.FeedEvent.COLUMN_NAME_DESCRIPTION == columnName) {
+						if (ev.m_Description != null) {
+							values.put(DbSchema.FeedEvent.COLUMN_NAME_DESCRIPTION, ev.m_Description);
+						}
+						else {
+							values.put(DbSchema.FeedEvent.COLUMN_NAME_DESCRIPTION, "");
+						}
+					}
+					else if (DbSchema.FeedEvent.COLUMN_NAME_EVENT_START == columnName) {
+						if (ev.m_Start != null) {
+							values.put(DbSchema.FeedEvent.COLUMN_NAME_EVENT_START, Utils.date2str(ev.m_Start));
+						}
+						else {
+							values.put(DbSchema.FeedEvent.COLUMN_NAME_EVENT_START, "");
+						}
+					}
+					else if (DbSchema.FeedEvent.COLUMN_NAME_EVENT_END == columnName) {
+						if (ev.m_End != null) {
+							values.put(DbSchema.FeedEvent.COLUMN_NAME_EVENT_END, Utils.date2str(ev.m_End));
+						}
+						else {
+							values.put(DbSchema.FeedEvent.COLUMN_NAME_EVENT_END, "");
+						}
+					}
+					else if (DbSchema.FeedEvent.COLUMN_NAME_PLACE == columnName) {
+						if (ev.m_Place != null) {
+							values.put(DbSchema.FeedEvent.COLUMN_NAME_PLACE, ev.m_Place); 
+						}
+						else {
+							values.put(DbSchema.FeedEvent.COLUMN_NAME_PLACE, "");
+						}
+					}
+					else if (DbSchema.FeedEvent.COLUMN_NAME_FLAG_PERIODIC == columnName) {
+						values.put(DbSchema.FeedEvent.COLUMN_NAME_FLAG_PERIODIC, ev.m_Is_Periodic ? 1 : 0);
+					}
+					else if (DbSchema.FeedEvent.COLUMN_NAME_PICTURE == columnName) {
+						if (ev.m_PicturePath != null) {
+							values.put(DbSchema.FeedEvent.COLUMN_NAME_PICTURE, ev.m_PicturePath);
+						}
+						else {
+							values.put(DbSchema.FeedEvent.COLUMN_NAME_PICTURE, "");
+						}
+					}
+					else if (DbSchema.FeedEvent.COLUMN_NAME_RING == columnName) {
+						if (ev.m_SoundPath != null) {
+							values.put(DbSchema.FeedEvent.COLUMN_NAME_RING, ev.m_SoundPath);
+						}
+						else {
+							values.put(DbSchema.FeedEvent.COLUMN_NAME_RING, "");
+						}
+					}
+					else {
+						Log.d("DEBUG", "An unknown name was found: " + columnName);
+					}
+				}
+				
+				SQL_result = db.update(DbSchema.FeedEvent.TABLE_NAME, values,
+					DbSchema.FeedEvent.COLUMN_NAME_ENTRY_ID + " = ?",
+					new String[] {String.valueOf(ev.m_Id)});
+				
+			} catch (android.database.SQLException e) {
+				Log.d("DEBUG", "Update event failed. SQL code = " + SQL_result);
+			} finally {
+				if (db) 
+					db.close();
+			}
+		} catch (Exception e) {
+			Log.d("DEBUG", e.getMessage());
 		}
 		
-		return result;
+		return SQL_result;
 	}
 	
 	/**
@@ -333,7 +420,7 @@ public class DbManager extends SQLiteOpenHelper {
 	 */
 	public int updateNote(Note nt, String columnName) {
 		//TODO
-		int result = -1;
+		int SQL_result = -1;
 		SQLiteDatabase db = null;
 		
 		try {
@@ -343,7 +430,7 @@ public class DbManager extends SQLiteOpenHelper {
 				db.close();
 		}
 		
-		return result;
+		return SQL_result;
 	}
 	
 	/**
